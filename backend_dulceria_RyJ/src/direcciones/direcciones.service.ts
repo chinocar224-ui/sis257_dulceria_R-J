@@ -12,6 +12,14 @@ export class DireccionesService {
   ) {}
 
   async create(createDireccionDto: CreateDireccionDto): Promise<Direccion> {
+    // Si la nueva dirección es principal, se desmarcan las demás del mismo cliente
+    if (createDireccionDto.principal) {
+      await this.direccionesRepository.update(
+        { idCliente: createDireccionDto.idCliente },
+        { principal: false },
+      );
+    }
+
     const direccion = new Direccion();
     Object.assign(direccion, createDireccionDto);
     return this.direccionesRepository.save(direccion);
@@ -34,7 +42,16 @@ export class DireccionesService {
   }
 
   async update(id: number, updateDireccionDto: UpdateDireccionDto): Promise<Direccion> {
-    await this.findOne(id);
+    const actual = await this.findOne(id);
+
+    // Si se marca como principal, se desmarcan las demás del mismo cliente
+    if (updateDireccionDto.principal) {
+      await this.direccionesRepository.update(
+        { idCliente: updateDireccionDto.idCliente ?? actual.idCliente },
+        { principal: false },
+      );
+    }
+
     await this.direccionesRepository.update(id, updateDireccionDto);
     return this.findOne(id);
   }

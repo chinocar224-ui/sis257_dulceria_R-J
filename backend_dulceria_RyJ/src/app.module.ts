@@ -7,6 +7,9 @@ import { RolesModule } from './roles/roles.module';
 import { UsuariosModule } from './usuarios/usuarios.module';
 import { ClientesModule } from './clientes/clientes.module';
 import { DireccionesModule } from './direcciones/direcciones.module';
+import { CategoriasModule } from './categorias/categorias.module';
+import { ProductosModule } from './productos/productos.module';
+import { ProveedoresModule } from './proveedores/proveedores.module';
 
 @Module({
   imports: [
@@ -26,6 +29,9 @@ import { DireccionesModule } from './direcciones/direcciones.module';
     UsuariosModule,
     ClientesModule,
     DireccionesModule,
+    CategoriasModule,
+    ProductosModule,
+    ProveedoresModule,
   ],
   controllers: [AppController],
   providers: [AppService],
