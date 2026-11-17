@@ -10,6 +10,7 @@ import { DireccionesModule } from './direcciones/direcciones.module';
 import { CategoriasModule } from './categorias/categorias.module';
 import { ProductosModule } from './productos/productos.module';
 import { ProveedoresModule } from './proveedores/proveedores.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { ProveedoresModule } from './proveedores/proveedores.module';
     CategoriasModule,
     ProductosModule,
     ProveedoresModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
