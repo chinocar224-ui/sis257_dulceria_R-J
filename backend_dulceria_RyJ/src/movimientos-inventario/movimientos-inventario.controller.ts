@@ -1,5 +1,4 @@
-import { Body, Controller, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { MovimientosInventarioService } from './movimientos-inventario.service';
 import { CreateMovimientoInventarioDto } from './dto/create-movimiento-inventario.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';

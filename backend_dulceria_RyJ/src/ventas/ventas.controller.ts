@@ -1,8 +1,7 @@
-import { Body, Controller, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { VentasService } from './ventas.service';
 import { CreateVentaDto } from './dto/create-venta.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Usuario } from '../usuarios/entities/usuario.entity';
 
 @ApiTags('ventas')

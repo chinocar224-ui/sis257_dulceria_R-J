@@ -1,10 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { DireccionesService } from './direcciones.service';
 import { CreateDireccionDto } from './dto/create-direccion.dto';
 import { UpdateDireccionDto } from './dto/update-direccion.dto';
 
 @ApiTags('direcciones')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @Controller('direcciones')
 export class DireccionesController {
   constructor(private readonly direccionesService: DireccionesService) {}
