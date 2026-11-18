@@ -11,6 +11,8 @@ import { CategoriasModule } from './categorias/categorias.module';
 import { ProductosModule } from './productos/productos.module';
 import { ProveedoresModule } from './proveedores/proveedores.module';
 import { AuthModule } from './auth/auth.module';
+import { MovimientosInventarioModule } from './movimientos-inventario/movimientos-inventario.module';
+import { VentasModule } from './ventas/ventas.module';
 
 @Module({
   imports: [
@@ -34,6 +36,8 @@ import { AuthModule } from './auth/auth.module';
     ProductosModule,
     ProveedoresModule,
     AuthModule,
+    MovimientosInventarioModule,
+    VentasModule,
   ],
   controllers: [AppController],
   providers: [AppService],
