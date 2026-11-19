@@ -2,97 +2,73 @@
 import { computed, onMounted, ref } from 'vue'
 import { isAxiosError } from 'axios'
 import http from '@/plugins/axios'
-import {
-  Button,
-  Dialog,
-  InputGroup,
-  InputGroupAddon,
-  InputNumber,
-  InputText,
-  Select,
-  Tag,
-} from 'primevue'
-import type { Producto } from '@/models/producto'
-import type { Usuario } from '@/models/usuario'
+import { Button, Dialog, InputGroup, InputGroupAddon, InputText, Select, Tag } from 'primevue'
+import { useAuthStore } from '@/stores'
+import type { Venta } from '@/models/venta'
 
-interface Movimiento {
-  id: number
-  idProducto: number
-  idVenta: number | null
-  tipo: string
-  cantidad: number
-  motivo: string
-  fechaCreacion: string
-  producto?: Producto
-  usuario?: Usuario
-}
-
-const movimientos = ref<Movimiento[]>([])
-const productos = ref<Producto[]>([])
+const authStore = useAuthStore()
+const ventas = ref<Venta[]>([])
 const busqueda = ref('')
-const filtroTipo = ref('TODOS')
-const mostrarDialog = ref(false)
-const guardando = ref(false)
-const nuevo = ref({ idProducto: null as number | null, tipo: 'ENTRADA', cantidad: 1, motivo: '' })
+const filtroEstado = ref('TODAS')
+const ventaDetalle = ref<Venta | null>(null)
+const mostrarDetalle = ref(false)
+const ventaAnular = ref<Venta | null>(null)
+const mostrarConfirmAnular = ref(false)
 
-const tiposFiltro = [
-  { label: 'Todos', value: 'TODOS' },
-  { label: 'Entradas', value: 'ENTRADA' },
-  { label: 'Salidas', value: 'SALIDA' },
-]
-const tipos = [
-  { label: 'ENTRADA (ingreso de mercadería)', value: 'ENTRADA' },
-  { label: 'SALIDA (baja por vencimiento, daño, etc.)', value: 'SALIDA' },
+const estados = [
+  { label: 'Todas', value: 'TODAS' },
+  { label: 'Pagadas', value: 'PAGADA' },
+  { label: 'Anuladas', value: 'ANULADA' },
 ]
 
 async function obtenerLista() {
-  movimientos.value = await http.get('movimientos-inventario').then((res) => res.data)
+  ventas.value = await http.get('ventas').then((res) => res.data)
 }
 
-async function obtenerProductos() {
-  productos.value = await http.get('productos').then((res) => res.data)
-}
-
-const opcionesProductos = computed(() =>
-  productos.value.map((p) => ({
-    id: p.id,
-    etiqueta: `${p.codigo} - ${p.nombre} (stock: ${p.stock})`,
-  })),
-)
-
-const movimientosFiltrados = computed(() => {
+const ventasFiltradas = computed(() => {
   const texto = busqueda.value.toLowerCase()
-  return movimientos.value.filter((m) => {
+  return ventas.value.filter((v) => {
     const coincideTexto =
-      (m.producto?.nombre ?? '').toLowerCase().includes(texto) ||
-      (m.producto?.codigo ?? '').toLowerCase().includes(texto) ||
-      m.motivo.toLowerCase().includes(texto)
-    const coincideTipo = filtroTipo.value === 'TODOS' || m.tipo === filtroTipo.value
-    return coincideTexto && coincideTipo
+      String(v.id).includes(texto) ||
+      `${v.cliente?.nombres} ${v.cliente?.apellidos}`.toLowerCase().includes(texto) ||
+      (v.cliente?.ciNit ?? '').includes(texto) ||
+      (v.usuario?.nombres ?? '').toLowerCase().includes(texto)
+    const coincideEstado = filtroEstado.value === 'TODAS' || v.estado === filtroEstado.value
+    return coincideTexto && coincideEstado
   })
 })
+
+// Resumen del día (solo ventas PAGADAS de hoy)
+const ventasDeHoy = computed(() => {
+  const hoy = new Date().toDateString()
+  return ventas.value.filter(
+    (v) => v.estado === 'PAGADA' && new Date(v.fecha).toDateString() === hoy,
+  )
+})
+const totalHoy = computed(() => ventasDeHoy.value.reduce((suma, v) => suma + v.total, 0))
 
 function formatearFecha(fecha?: string) {
   return fecha ? new Date(fecha).toLocaleString('es-BO') : ''
 }
 
-function abrirDialog() {
-  nuevo.value = { idProducto: null, tipo: 'ENTRADA', cantidad: 1, motivo: '' }
-  obtenerProductos()
-  mostrarDialog.value = true
+async function verDetalle(venta: Venta) {
+  ventaDetalle.value = await http.get(`ventas/${venta.id}`).then((res) => res.data)
+  mostrarDetalle.value = true
 }
 
-async function guardar() {
-  guardando.value = true
+function confirmarAnular(venta: Venta) {
+  ventaAnular.value = venta
+  mostrarConfirmAnular.value = true
+}
+
+async function anular() {
   try {
-    await http.post('movimientos-inventario', nuevo.value)
-    mostrarDialog.value = false
+    await http.patch(`ventas/${ventaAnular.value?.id}/anular`)
+    mostrarConfirmAnular.value = false
     await obtenerLista()
   } catch (e) {
     const mensaje = isAxiosError(e) ? e.response?.data?.message : undefined
-    alert(Array.isArray(mensaje) ? mensaje.join('\n') : mensaje || 'No se pudo registrar')
-  } finally {
-    guardando.value = false
+    alert(mensaje || 'No se pudo anular la venta')
   }
 }
 
@@ -102,19 +78,37 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2><i class="bi bi-box-seam"></i> Inventario</h2>
-    <Button label="Registrar movimiento" icon="pi pi-plus" @click="abrirDialog" />
+  <h2 class="mb-3"><i class="bi bi-receipt"></i> Historial de ventas</h2>
+
+  <!-- Resumen del día -->
+  <div class="row g-3 mb-3">
+    <div class="col-md-6">
+      <div class="card resumen">
+        <div class="card-body">
+          <small class="text-muted">Ventas de hoy</small>
+          <div class="fs-3 fw-bold">{{ ventasDeHoy.length }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card resumen">
+        <div class="card-body">
+          <small class="text-muted">Total vendido hoy</small>
+          <div class="fs-3 fw-bold">Bs. {{ totalHoy.toFixed(2) }}</div>
+        </div>
+      </div>
+    </div>
   </div>
 
+  <!-- Filtros -->
   <div class="d-flex gap-2 mb-3">
     <InputGroup>
       <InputGroupAddon><i class="pi pi-search"></i></InputGroupAddon>
-      <InputText v-model="busqueda" placeholder="Buscar por producto, código o motivo" />
+      <InputText v-model="busqueda" placeholder="Buscar por N°, cliente, CI/NIT o cajero" />
     </InputGroup>
     <Select
-      v-model="filtroTipo"
-      :options="tiposFiltro"
+      v-model="filtroEstado"
+      :options="estados"
       optionLabel="label"
       optionValue="value"
       style="min-width: 10rem"
@@ -125,82 +119,132 @@ onMounted(() => {
     <table class="table table-hover align-middle">
       <thead class="table-light">
         <tr>
+          <th>N°</th>
           <th>Fecha</th>
-          <th>Producto</th>
-          <th class="text-center">Tipo</th>
-          <th class="text-center">Cantidad</th>
-          <th>Motivo</th>
-          <th>Usuario</th>
+          <th>Cliente</th>
+          <th>Cajero</th>
+          <th class="text-end">Total (Bs.)</th>
+          <th class="text-center">Estado</th>
+          <th class="text-center">Acciones</th>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="m in movimientosFiltrados" :key="m.id">
-          <td>{{ formatearFecha(m.fechaCreacion) }}</td>
-          <td>{{ m.producto?.codigo }} - {{ m.producto?.nombre }}</td>
+        <tr
+          v-for="venta in ventasFiltradas"
+          :key="venta.id"
+          :class="{ anulada: venta.estado === 'ANULADA' }"
+        >
+          <td>{{ venta.id }}</td>
+          <td>{{ formatearFecha(venta.fecha) }}</td>
+          <td>{{ venta.cliente?.nombres }} {{ venta.cliente?.apellidos }}</td>
+          <td>{{ venta.usuario?.nombres }}</td>
+          <td class="text-end fw-semibold">{{ venta.total.toFixed(2) }}</td>
           <td class="text-center">
-            <Tag
-              :value="m.tipo"
-              :severity="m.tipo === 'ENTRADA' ? 'success' : 'danger'"
-              :icon="m.tipo === 'ENTRADA' ? 'pi pi-arrow-down' : 'pi pi-arrow-up'"
+            <Tag :value="venta.estado" :severity="venta.estado === 'PAGADA' ? 'success' : 'danger'" />
+          </td>
+          <td class="text-center text-nowrap">
+            <Button icon="pi pi-eye" text aria-label="Ver detalle" @click="verDetalle(venta)" />
+            <Button
+              v-if="authStore.esAdmin && venta.estado === 'PAGADA'"
+              icon="pi pi-ban"
+              text
+              severity="danger"
+              aria-label="Anular"
+              @click="confirmarAnular(venta)"
             />
           </td>
-          <td class="text-center fw-bold" :class="m.tipo === 'ENTRADA' ? 'text-success' : 'text-danger'">
-            {{ m.tipo === 'ENTRADA' ? '+' : '−' }}{{ m.cantidad }}
-          </td>
-          <td>{{ m.motivo }}</td>
-          <td>{{ m.usuario?.nombres }}</td>
         </tr>
-        <tr v-if="movimientosFiltrados.length === 0">
-          <td colspan="6" class="text-center">No hay movimientos</td>
+        <tr v-if="ventasFiltradas.length === 0">
+          <td colspan="7" class="text-center">No se encontraron ventas</td>
         </tr>
       </tbody>
     </table>
   </div>
 
-  <!-- Registrar movimiento -->
+  <!-- Detalle de la venta -->
   <Dialog
-    v-model:visible="mostrarDialog"
-    header="Registrar movimiento de inventario"
+    v-model:visible="mostrarDetalle"
+    :header="`Venta N° ${ventaDetalle?.id ?? ''}`"
     :style="{ width: '34rem' }"
     modal
   >
-    <div class="flex align-items-center gap-3 mb-3">
-      <label class="font-semibold w-3">Producto</label>
-      <Select
-        v-model="nuevo.idProducto"
-        :options="opcionesProductos"
-        optionLabel="etiqueta"
-        optionValue="id"
-        placeholder="Seleccione un producto"
-        class="flex-auto"
-        filter
-      />
+    <div v-if="ventaDetalle">
+      <p class="mb-1"><b>Fecha:</b> {{ formatearFecha(ventaDetalle.fecha) }}</p>
+      <p class="mb-1">
+        <b>Cliente:</b> {{ ventaDetalle.cliente?.nombres }} {{ ventaDetalle.cliente?.apellidos }}
+        (CI/NIT: {{ ventaDetalle.cliente?.ciNit }})
+      </p>
+      <p class="mb-1"><b>Cajero:</b> {{ ventaDetalle.usuario?.nombres }}</p>
+      <p class="mb-2">
+        <b>Estado:</b>
+        <Tag
+          :value="ventaDetalle.estado"
+          :severity="ventaDetalle.estado === 'PAGADA' ? 'success' : 'danger'"
+          class="ms-1"
+        />
+      </p>
+
+      <table class="table table-sm">
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th class="text-center">Cant.</th>
+            <th class="text-end">P. Unit.</th>
+            <th class="text-end">Subtotal</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="d in ventaDetalle.detalles" :key="d.id">
+            <td>{{ d.producto?.nombre }}</td>
+            <td class="text-center">{{ d.cantidad }}</td>
+            <td class="text-end">{{ d.precioUnitario.toFixed(2) }}</td>
+            <td class="text-end">{{ d.subtotal.toFixed(2) }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="d-flex justify-content-between fw-bold fs-5">
+        <span>TOTAL</span><span>Bs. {{ ventaDetalle.total.toFixed(2) }}</span>
+      </div>
+      <div v-for="p in ventaDetalle.pagos" :key="p.id" class="d-flex justify-content-between">
+        <span>
+          Pago {{ p.metodo }}
+          <small v-if="p.referencia" class="text-muted">(Ref: {{ p.referencia }})</small>
+        </span>
+        <span>Bs. {{ p.monto.toFixed(2) }}</span>
+      </div>
     </div>
-    <div class="flex align-items-center gap-3 mb-3">
-      <label class="font-semibold w-3">Tipo</label>
-      <Select
-        v-model="nuevo.tipo"
-        :options="tipos"
-        optionLabel="label"
-        optionValue="value"
-        class="flex-auto"
-      />
-    </div>
-    <div class="flex align-items-center gap-3 mb-3">
-      <label class="font-semibold w-3">Cantidad</label>
-      <InputNumber v-model="nuevo.cantidad" :min="1" showButtons class="flex-auto" />
-    </div>
-    <div class="flex align-items-center gap-3 mb-4">
-      <label class="font-semibold w-3">Motivo</label>
-      <InputText
-        v-model="nuevo.motivo"
-        class="flex-auto"
-        :placeholder="nuevo.tipo === 'ENTRADA' ? 'Ej: Compra a Distribuidora Dulce Sur' : 'Ej: Producto vencido'"
-      />
-    </div>
+  </Dialog>
+
+  <!-- Confirmar anulación -->
+  <Dialog
+    v-model:visible="mostrarConfirmAnular"
+    header="Anular venta"
+    :style="{ width: '26rem' }"
+    modal
+  >
+    <p>
+      ¿Seguro que deseas anular la <b>venta N° {{ ventaAnular?.id }}</b> por
+      <b>Bs. {{ ventaAnular?.total.toFixed(2) }}</b>?
+    </p>
+    <p class="text-muted small">Los productos volverán al stock.</p>
     <div class="flex justify-content-end gap-2">
-      <Button label="Cancelar" severity="secondary" @click="mostrarDialog = false" />
-      <Button label="Guardar" icon="pi pi-save" :loading="guardando" @click="guardar" />
+      <Button label="Cancelar" severity="secondary" @click="mostrarConfirmAnular = false" />
+      <Button label="Anular" icon="pi pi-ban" severity="danger" @click="anular" />
     </div>
   </Dialog>
 </template>
+
+<style scoped>
+.resumen {
+  border-left: 5px solid var(--acento);
+}
+.anulada td {
+  color: #777;
+  text-decoration: line-through;
+}
+.anulada td:last-child,
+.anulada td:nth-last-child(2) {
+  text-decoration: none;
+}
+</style>

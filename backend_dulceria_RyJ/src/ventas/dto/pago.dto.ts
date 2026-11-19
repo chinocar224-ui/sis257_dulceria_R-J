@@ -1,7 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsIn, IsNotEmpty, IsNumber, IsOptional, IsPositive, IsString, MaxLength } from 'class-validator';
-
+import { IsIn, IsNotEmpty, IsNumber, IsOptional, IsPositive, IsString, Max, MaxLength } from 'class-validator';
 export class PagoDto {
   @ApiProperty({ example: 'EFECTIVO', enum: ['EFECTIVO', 'QR', 'TARJETA'] })
   @IsNotEmpty({ message: 'El método de pago es obligatorio' })
@@ -14,7 +13,8 @@ export class PagoDto {
   @ApiProperty({ example: 50 })
   @IsNumber({ maxDecimalPlaces: 2 }, { message: 'El monto debe ser un número con máximo 2 decimales' })
   @IsPositive({ message: 'El monto debe ser mayor a 0' })
-  readonly monto: number;
+  @Max(10000, { message: 'El monto no puede ser mayor a Bs. 10.000' })
+  readonly monto: number;;
 
   @ApiPropertyOptional()
   @IsOptional()

@@ -274,6 +274,7 @@ onMounted(() => {
               :minFractionDigits="2"
               :maxFractionDigits="2"
               :min="0"
+              :max="10000"
               prefix="Bs. "
               class="w-full mb-2"
               inputClass="w-full"

@@ -1,6 +1,6 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
-
+import { useAuthStore } from './stores'
 import PrimeVue from 'primevue/config'
 import Aura from '@primevue/themes/aura'
 import { definePreset } from '@primevue/themes'
@@ -52,5 +52,10 @@ app.use(PrimeVue, {
     },
   },
 })
+// Seguridad: al recargar la página se cierra la sesión y se vuelve al login
+const authStore = useAuthStore()
+if (authStore.token) {
+  authStore.logout()
+}
 
 app.mount('#app')
