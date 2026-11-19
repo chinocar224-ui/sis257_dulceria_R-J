@@ -1,0 +1,146 @@
+/* =========================================================
+   TEMA DULCERÍA R&J (basado en el template Poseify, oscuro)
+   Para cambiar el color de acento, edita SOLO este bloque.
+   ========================================================= */
+:root,
+[data-bs-theme='dark'] {
+  --acento: #c9a227; /* dorado caramelo */
+  --acento-rgb: 201, 162, 39;
+  --acento-hover: #b08d1f;
+  --acento-activo: #977818;
+  --acento-texto: #0d0d0d; /* texto sobre botones dorados */
+}
+
+/* ===== Colores base (oscuros) ===== */
+:root,
+[data-bs-theme='dark'] {
+  --bs-primary: var(--acento);
+  --bs-primary-rgb: var(--acento-rgb);
+  --bs-secondary: #1a1a1a;
+  --bs-secondary-rgb: 26, 26, 26;
+  --bs-dark: #0d0d0d;
+  --bs-dark-rgb: 13, 13, 13;
+  --bs-light: #a0a0a0;
+  --bs-body-bg: #0d0d0d;
+  --bs-body-color: #b5b5b5;
+  --bs-border-color: #2c2c2c;
+  --bs-link-color: var(--acento);
+  --bs-link-color-rgb: var(--acento-rgb);
+  --bs-link-hover-color: var(--acento-hover);
+  --bs-link-hover-color-rgb: var(--acento-rgb);
+  --bs-body-font-family: 'Work Sans', sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Josefin Sans', sans-serif;
+  color: #fff;
+}
+
+a {
+  text-decoration: none;
+}
+
+/* ===== Botones de Bootstrap ===== */
+.btn-primary {
+  --bs-btn-color: var(--acento-texto);
+  --bs-btn-bg: var(--acento);
+  --bs-btn-border-color: var(--acento);
+  --bs-btn-hover-color: var(--acento-texto);
+  --bs-btn-hover-bg: var(--acento-hover);
+  --bs-btn-hover-border-color: var(--acento-hover);
+  --bs-btn-active-color: var(--acento-texto);
+  --bs-btn-active-bg: var(--acento-activo);
+  --bs-btn-active-border-color: var(--acento-activo);
+}
+
+.btn-outline-primary {
+  --bs-btn-color: var(--acento);
+  --bs-btn-border-color: var(--acento);
+  --bs-btn-hover-color: var(--acento-texto);
+  --bs-btn-hover-bg: var(--acento);
+  --bs-btn-hover-border-color: var(--acento);
+  --bs-btn-active-color: var(--acento-texto);
+  --bs-btn-active-bg: var(--acento);
+  --bs-btn-active-border-color: var(--acento);
+}
+
+/* ===== Tablas y tarjetas en tonos oscuros ===== */
+.table {
+  --bs-table-bg: transparent;
+}
+.table-light {
+  --bs-table-color: #fff;
+  --bs-table-bg: #1a1a1a;
+  --bs-table-border-color: #2c2c2c;
+}
+.card {
+  --bs-card-bg: #161616;
+  --bs-card-border-color: #2c2c2c;
+}
+
+/* ===== Menú ===== */
+.navbar.navbar-fija {
+  position: sticky;
+  background: var(--bs-dark);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
+}
+.navbar.navbar-fija .navbar-nav .nav-link {
+  padding: 22px 0;
+}
+.navbar .dropdown-toggle::after {
+  content: '\F282';
+  font-family: 'bootstrap-icons';
+  font-weight: normal;
+  font-size: 0.8rem;
+}
+.navbar .nav-link.router-link-active,
+.navbar .nav-link.router-link-exact-active {
+  color: var(--acento) !important;
+}
+.dropdown-menu {
+  --bs-dropdown-bg: #1a1a1a;
+  --bs-dropdown-link-color: #ddd;
+  --bs-dropdown-link-hover-bg: #2c2c2c;
+  --bs-dropdown-link-hover-color: #fff;
+}
+.dropdown-item.router-link-active {
+  background: var(--acento);
+  color: var(--acento-texto);
+}
+
+/* ===== Carrusel de inicio ===== */
+#header-carousel .carousel-item img {
+  height: 90vh;
+  min-height: 550px;
+  object-fit: cover;
+}
+
+/* ===== Títulos del template sobre fondo oscuro ===== */
+.title h5 {
+  color: var(--acento);
+}
+
+/* ===== Carrusel: Bootstrap 5.3 en modo oscuro pone el texto y las flechas en negro ===== */
+.carousel {
+  --bs-carousel-caption-color: #fff;
+  --bs-carousel-control-icon-filter: none;
+  --bs-carousel-indicator-active-bg: #fff;
+}
+.carousel .carousel-caption {
+  color: #fff;
+}
+[data-bs-theme='dark'] .carousel .carousel-control-prev-icon,
+[data-bs-theme='dark'] .carousel .carousel-control-next-icon {
+  filter: none;
+}
+
+/* ===== Footer: fondo animado con dulces (reemplaza las siluetas del template) ===== */
+.footer {
+  background-color: var(--bs-dark) !important;
+  background-position: 0 bottom;
+}

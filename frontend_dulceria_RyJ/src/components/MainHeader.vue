@@ -1,110 +1,85 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores'
 
 const authStore = useAuthStore()
+const route = useRoute()
+// En el inicio el menú flota sobre el carrusel (como en el template)
+const esInicio = computed(() => route.path === '/')
 </script>
 
 <template>
-  <nav class="navbar navbar-expand-lg navbar-dark menu-dulce sticky-top">
-    <div class="container">
-      <RouterLink class="navbar-brand fw-bold" to="/">
-        <i class="bi bi-cake2"></i> Dulcería R&amp;J
+  <div class="container-fluid p-0">
+    <nav class="navbar navbar-expand-lg navbar-dark px-lg-5" :class="{ 'navbar-fija': !esInicio }">
+      <RouterLink to="/" class="navbar-brand ms-4 ms-lg-0">
+        <h2 class="mb-0 text-primary text-uppercase">
+          <i class="bi bi-cake2 me-1"></i>Dulcería R&amp;J
+        </h2>
       </RouterLink>
       <button
-        class="navbar-toggler"
         type="button"
+        class="navbar-toggler me-4"
         data-bs-toggle="collapse"
-        data-bs-target="#menuPrincipal"
+        data-bs-target="#navbarCollapse"
       >
         <span class="navbar-toggler-icon"></span>
       </button>
 
-      <div id="menuPrincipal" class="collapse navbar-collapse">
-        <ul class="navbar-nav ms-auto align-items-lg-center">
-          <li class="nav-item">
-            <RouterLink class="nav-link" to="/">Inicio</RouterLink>
-          </li>
+      <div id="navbarCollapse" class="collapse navbar-collapse">
+        <div class="navbar-nav mx-auto p-4 p-lg-0">
+          <RouterLink to="/" class="nav-item nav-link">Inicio</RouterLink>
 
           <template v-if="authStore.token">
-            <!-- Ventas -->
-            <li class="nav-item">
-              <RouterLink class="nav-link" to="/punto-venta">
-                <i class="bi bi-cart3"></i> Punto de venta
-              </RouterLink>
-            </li>
-            <li class="nav-item">
-              <RouterLink class="nav-link" to="/ventas">Ventas</RouterLink>
-            </li>
+            <RouterLink to="/punto-venta" class="nav-item nav-link">Punto de venta</RouterLink>
+            <RouterLink to="/ventas" class="nav-item nav-link">Ventas</RouterLink>
 
-            <!-- Catálogos -->
-            <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                Catálogos
-              </a>
-              <ul class="dropdown-menu dropdown-menu-end">
-                <li><RouterLink class="dropdown-item" to="/productos">Productos</RouterLink></li>
-                <li><RouterLink class="dropdown-item" to="/clientes">Clientes</RouterLink></li>
-                <li><RouterLink class="dropdown-item" to="/direcciones">Direcciones</RouterLink></li>
+            <div class="nav-item dropdown">
+              <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">Catálogos</a>
+              <div class="dropdown-menu m-0">
+                <RouterLink to="/productos" class="dropdown-item">Productos</RouterLink>
+                <RouterLink to="/clientes" class="dropdown-item">Clientes</RouterLink>
+                <RouterLink to="/direcciones" class="dropdown-item">Direcciones</RouterLink>
                 <template v-if="authStore.esAdmin">
-                  <li><hr class="dropdown-divider" /></li>
-                  <li><RouterLink class="dropdown-item" to="/categorias">Categorías</RouterLink></li>
-                  <li><RouterLink class="dropdown-item" to="/proveedores">Proveedores</RouterLink></li>
-                  <li><RouterLink class="dropdown-item" to="/inventario">Inventario</RouterLink></li>
+                  <RouterLink to="/categorias" class="dropdown-item">Categorías</RouterLink>
+                  <RouterLink to="/proveedores" class="dropdown-item">Proveedores</RouterLink>
+                  <RouterLink to="/inventario" class="dropdown-item">Inventario</RouterLink>
                 </template>
-              </ul>
-            </li>
+              </div>
+            </div>
 
-            <!-- Administración (solo ADMIN) -->
-            <li v-if="authStore.esAdmin" class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                Administración
-              </a>
-              <ul class="dropdown-menu dropdown-menu-end">
-                <li><RouterLink class="dropdown-item" to="/usuarios">Usuarios</RouterLink></li>
-                <li><RouterLink class="dropdown-item" to="/roles">Roles</RouterLink></li>
-              </ul>
-            </li>
-
-            <!-- Usuario conectado -->
-            <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                <i class="bi bi-person-circle"></i> {{ authStore.nombres || authStore.user }}
-              </a>
-              <ul class="dropdown-menu dropdown-menu-end">
-                <li>
-                  <span class="dropdown-item-text small text-muted">Rol: {{ authStore.rol }}</span>
-                </li>
-                <li><hr class="dropdown-divider" /></li>
-                <li>
-                  <a class="dropdown-item text-danger" href="#" @click.prevent="authStore.logout()">
-                    <i class="bi bi-box-arrow-right"></i> Cerrar sesión
-                  </a>
-                </li>
-              </ul>
-            </li>
+            <div v-if="authStore.esAdmin" class="nav-item dropdown">
+              <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">Administración</a>
+              <div class="dropdown-menu m-0">
+                <RouterLink to="/usuarios" class="dropdown-item">Usuarios</RouterLink>
+                <RouterLink to="/roles" class="dropdown-item">Roles</RouterLink>
+              </div>
+            </div>
           </template>
+        </div>
 
-          <li v-else class="nav-item">
-            <RouterLink class="nav-link" to="/login">
-              <i class="bi bi-box-arrow-in-right"></i> Iniciar sesión
-            </RouterLink>
-          </li>
-        </ul>
+        <!-- Botón de la derecha (en el template era "Download Now") -->
+        <div class="d-flex align-items-center pb-3 pb-lg-0 px-4 px-lg-0">
+          <div v-if="authStore.token" class="nav-item dropdown">
+            <a
+              href="#"
+              class="btn btn-outline-primary border-2 dropdown-toggle"
+              data-bs-toggle="dropdown"
+            >
+              <i class="bi bi-person-circle"></i> {{ authStore.nombres || authStore.user }}
+            </a>
+            <div class="dropdown-menu dropdown-menu-end m-0">
+              <span class="dropdown-item-text small">Rol: {{ authStore.rol }}</span>
+              <a href="#" class="dropdown-item text-danger" @click.prevent="authStore.logout()">
+                <i class="bi bi-box-arrow-right"></i> Cerrar sesión
+              </a>
+            </div>
+          </div>
+          <RouterLink v-else to="/login" class="btn btn-outline-primary border-2">
+            <i class="bi bi-box-arrow-in-right"></i> Iniciar sesión
+          </RouterLink>
+        </div>
       </div>
-    </div>
-  </nav>
+    </nav>
+  </div>
 </template>
-
-<style scoped>
-.menu-dulce {
-  background: linear-gradient(90deg, #d63384, #f472b6);
-}
-.nav-link.router-link-active {
-  font-weight: bold;
-  color: #fff !important;
-}
-.dropdown-item.router-link-active {
-  background: #fce7f3;
-  color: #9d174d;
-}
-</style>
