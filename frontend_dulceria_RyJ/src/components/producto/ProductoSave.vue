@@ -19,6 +19,9 @@ const emit = defineEmits(['guardar', 'close'])
 const producto = ref<Producto>({ ...props.producto })
 const categorias = ref<Categoria[]>([])
 const proveedores = ref<Proveedor[]>([])
+// Fecha de hoy en formato AAAA-MM-DD (hora local)
+const h = new Date()
+const hoy = `${h.getFullYear()}-${String(h.getMonth() + 1).padStart(2, '0')}-${String(h.getDate()).padStart(2, '0')}`
 
 const dialogVisible = computed({
   get: () => props.mostrar,
@@ -50,6 +53,12 @@ watch(
 
 async function handleSave() {
   try {
+    const fecha = producto.value.fechaVencimiento
+    const cambioFecha = fecha !== props.producto?.fechaVencimiento
+    if (fecha && cambioFecha && fecha < hoy) {
+      alert('La fecha de vencimiento no puede ser una fecha pasada')
+      return
+    }
     const body = {
       idCategoria: producto.value.idCategoria,
       idProveedor: producto.value.idProveedor ?? null,
@@ -157,10 +166,11 @@ async function handleSave() {
     </div>
     <div class="flex align-items-center gap-3 mb-3">
       <label for="fechaVencimiento" class="font-semibold w-3">Vencimiento</label>
-      <InputText
+       <InputText
         id="fechaVencimiento"
         v-model="producto.fechaVencimiento"
         type="date"
+        :min="hoy"
         class="flex-auto"
       />
     </div>
